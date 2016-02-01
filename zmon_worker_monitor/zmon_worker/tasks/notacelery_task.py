@@ -1603,7 +1603,7 @@ class NotaZmonTask(object):
     def send_notification(self, notification, context):
         ctx = _build_notify_context(context)
         try:
-            repeat = safe_eval(notification, eval_source='<check-command>' , **ctx)
+            repeat = safe_eval(notification, eval_source='<check-command>', **ctx)
         except Exception, e:
             # TODO Define what should happen if sending emails or sms fails.
             self.logger.exception(e)

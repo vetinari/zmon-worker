@@ -17,8 +17,7 @@ CONNECTION_RE = \
 (:(?P<port>\d+))?       # port - integer, optional
 /(?P<dbname>\w+)        # database name
 $
-'''
-               , re.X)
+''', re.X)
 
 
 class MySqlFactory(IFunctionFactoryPlugin):
