@@ -7,12 +7,15 @@ Server module for exposing an rpc interface for clients to remotely control a lo
 import sys
 import signal
 import settings
+import logging
+
+from pprint import pformat
 
 from process_controller import ProcessController
 import worker
 import rpc_utils
 
-from .consts import MONITOR_RESTART, MONITOR_KILL_REQ, MONITOR_PING
+logger = logging.getLogger(__name__)
 
 
 def sigterm_handler(signum, frame):
@@ -39,8 +42,14 @@ class ProcessControllerProxy(rpc_utils.RpcProxy):
                      'get_action_policy', 'set_action_policy', 'available_action_policies', 'terminate_all_processes',
                      'terminate_process', 'mark_for_termination']
 
+    def list_running(self):
+        return pformat(self.get_exposed_obj().list_running())
+
+    def list_stats(self):
+        return pformat(self.get_exposed_obj().list_stats())
+
     def on_exit(self):
-        self.get_exposed_obj().terminate_all_processes()
+        self.get_exposed_obj().terminate_all_processes()  # TODO: Think why exit codes are sometimes -15 and others 0
 
 
 class MainProcess(object):
@@ -49,8 +58,7 @@ class MainProcess(object):
         signal.signal(signal.SIGTERM, sigterm_handler)
 
     def start_proc_control(self):
-        self.proc_control = ProcessController(default_target=worker.start_worker,
-                                              default_flags=MONITOR_RESTART | MONITOR_KILL_REQ | MONITOR_PING)
+        self.proc_control = ProcessController(default_target=worker.start_worker, action_policy='report')
 
     def start_rpc_server(self):
 
