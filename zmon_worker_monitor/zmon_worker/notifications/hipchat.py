@@ -8,12 +8,20 @@ from notification import BaseNotification
 
 logger = logging.getLogger(__name__)
 
-
 class NotifyHipchat(BaseNotification):
     @classmethod
     def notify(cls, alert, *args, **kwargs):
         url = cls._config.get('notifications.hipchat.url')
+
+        if not url:
+            logger.error("NOTIFICATIONS_HIPCHAT_URL is not set")
+            return 0
+
         token = kwargs.get('token', cls._config.get('notifications.hipchat.token'))
+        if not token:
+            logger.error("NOTIFICATIONS_HIPCHAT_TOKEN is not set")
+            return 0
+
         repeat = kwargs.get('repeat', 0)
         notify = kwargs.get('notify', False)
 

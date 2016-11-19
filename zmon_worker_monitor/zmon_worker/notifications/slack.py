@@ -17,7 +17,7 @@ class NotifySlack(BaseNotification):
         repeat = kwargs.get('repeat', 0)
 
         if not url:
-            raise NotificationError('Webhook is required!')
+            raise NotificationError('NOTIFICATIONS_SLACK_WEBHOOK is not set.')
 
         message = {
             'username': 'ZMON',

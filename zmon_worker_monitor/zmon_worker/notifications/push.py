@@ -6,6 +6,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+tokens.configure()
+tokens.manage('uid', ['uid'])
+
 
 def formatEntity(entity_id):
     parts = entity_id.split("[")
@@ -23,11 +26,22 @@ def formatEntity(entity_id):
 class NotifyPush(BaseNotification):
     @classmethod
     def notify(cls, alert, *args, **kwargs):
-        url = kwargs.get('url', cls._config.get('notifications.push.url'))
-        key = kwargs.get('key', cls._config.get('notifications.push.key'))
+        url = kwargs.get('url', cls._config.get('notification.service.url', None))
+        key = kwargs.get('key', cls._config.get('notification.service.key', None))
+        oauth2 = kwargs.get('oauth2', True)
 
-        if url is None or "" == url:
+        if not url:
             return 0
+
+        headers = {'Content-type': 'application/json'}
+        if oauth2:
+            key = tokens.get('uid'))
+        else:
+            if not key:
+                logger.error("NOTIFICATION_SERVICE_KEY not set to trigger notification service")
+                return 0
+
+        headers.update({'Authorization': 'Bearer {}'.format(key)})
 
         repeat = kwargs.get('repeat', 0)
 
@@ -51,11 +65,12 @@ class NotifyPush(BaseNotification):
 
         try:
             # logger.info("Sending push notification to %s %s", url, message)
-            r = requests.post(url, headers={"Authorization": "PreShared " + key, 'Content-Type': 'application/json'},
+            r = requests.post(url,
+                              headers=headers,
                               data=json.dumps(message))
             r.raise_for_status()
         except Exception as ex:
-            logger.exception("Push write failed %s", ex)
+            logger.exception("Triggering push notifications failed %s", ex)
 
         return repeat
 

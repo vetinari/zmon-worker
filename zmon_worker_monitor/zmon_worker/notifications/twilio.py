@@ -28,12 +28,14 @@ class NotifyTwilio(BaseNotification):
 
         repeat = kwargs.get('repeat', 0)
         oauth2 = kwargs.get('oauth2', True)
+        key = kwargs.get('key', cls._config.get('notification.service.key', None))
+
         headers = {'Content-type': 'application/json'}
         timeout = 5
 
-        url = cls._config.get('notifications.service.url', None)
+        url = cls._config.get('notification.service.url', None)
         if not url:
-            logger.error('No notification service url set')
+            logger.error('NOTIFICATION_SERVICE_URL needs to be set for Twilio.')
             return repeat
 
         url = url + '/api/v1/twilio'
@@ -41,7 +43,9 @@ class NotifyTwilio(BaseNotification):
         if oauth2:
             headers.update({'Authorization': 'Bearer {}'.format(tokens.get('uid'))})
         else:
-            key = kwargs.get('key', cls._config.get('notifications.service.key'))
+            if not key:
+                logger.error("NOTIFICATION_SERVICE_KEY not set to trigger notification service")
+                return repeat
             headers.update({'Authorization': 'Bearer {}'.format(key)})
 
         headers['User-Agent'] = get_user_agent()
