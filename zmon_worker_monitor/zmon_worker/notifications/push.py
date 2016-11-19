@@ -3,6 +3,7 @@ from notification import BaseNotification
 import json
 import requests
 import logging
+import tokens
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class NotifyPush(BaseNotification):
 
         headers = {'Content-type': 'application/json'}
         if oauth2:
-            key = tokens.get('uid'))
+            key = tokens.get('uid')
         else:
             if not key:
                 logger.error("NOTIFICATION_SERVICE_KEY not set to trigger notification service")

@@ -8,6 +8,7 @@ from notification import BaseNotification
 
 logger = logging.getLogger(__name__)
 
+
 class NotifyHipchat(BaseNotification):
     @classmethod
     def notify(cls, alert, *args, **kwargs):
