@@ -7,6 +7,7 @@ import os
 from zmon_worker_monitor.zmon_worker.errors import CheckError
 from zmon_worker_monitor.adapters.ifunctionfactory_plugin import IFunctionFactoryPlugin, propartial
 
+
 class OpenAMFactory(IFunctionFactoryPlugin):
     def __init__(self):
         super(OpenAMFactory, self).__init__()
@@ -28,6 +29,7 @@ class OpenAMFactory(IFunctionFactoryPlugin):
         :return: an object that implements a check function
         """
         return propartial(OpenAMWrapper, url=self.openam_base_url, user=self.username, password=self.__password)
+
 
 class OpenAMError(CheckError):
     def __init__(self, message):
@@ -67,9 +69,19 @@ class OpenAMWrapper(object):
             self.params.update({"service": chain})
             self.params.update({"authIndexType": "service"})
             self.params.update({"authIndexValue": chain})
-        self.headers.update({"X-OpenAM-Username": user, "X-OpenAM-Password": password, "Content-Type": "application/json"})
+        self.headers.update({
+            "X-OpenAM-Username": user,
+            "X-OpenAM-Password": password,
+            "Content-Type": "application/json",
+        })
         try:
-            r = requests.post(self.url + "/json/authenticate", params=self.params, headers=self.headers, json={}, allow_redirects=False)
+            r = requests.post(
+                self.url + "/json/authenticate",
+                params=self.params,
+                headers=self.headers,
+                json={},
+                allow_redirects=False,
+            )
         except Exception, e:
             raise OpenAMError("failed to call OpenAM: "+str(e))
 
@@ -83,6 +95,7 @@ class OpenAMWrapper(object):
         result["duration"] = r.elapsed.total_seconds()
         result["code"] = r.status_code
         return result
+
 
 if __name__ == '__main__':
     import sys
@@ -99,5 +112,9 @@ if __name__ == '__main__':
     factory_ctx = {}
 
     # eventlog = EventLogWrapper()
-    openam = OpenAMWrapper(openam_url, user=os.getenv("OPENAM_USER"), password=os.getenv("OPENAM_PASSWORD")).auth(realm="/employees", chain="EmployeeChain")
+    openam = OpenAMWrapper(
+        openam_url,
+        user=os.getenv("OPENAM_USER"),
+        password=os.getenv("OPENAM_PASSWORD")
+    ).auth(realm="/employees", chain="EmployeeChain")
     print(openam)
