@@ -3,10 +3,10 @@ Name = openam
 Module = openam
 
 [Documentation]
-Author = John Doe
+Author = Hanno Hecker
 Version = 0.1
 Website = https://github.com/zalando/zmon-worker
-Description = Builtin plugin that provides an http request check function.
+Description = Builtin plugin that provides an openam request check function.
 
 
 [Configuration]
