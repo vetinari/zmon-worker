@@ -16,7 +16,7 @@ class OpenAMFactory(IFunctionFactoryPlugin):
         Called after plugin is loaded to pass the [configuration] section in their plugin info file
         :param conf: configuration dictionary
         """
-        self.openam_base_url = config.get('url')
+        self.openam_base_url = conf.get('url')
         return
 
     def create(self, factory_ctx):
