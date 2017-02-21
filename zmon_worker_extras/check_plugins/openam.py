@@ -17,6 +17,8 @@ class OpenAMFactory(IFunctionFactoryPlugin):
         :param conf: configuration dictionary
         """
         self.openam_base_url = conf.get('url')
+        self.username = conf.get('user')
+        self.__password = conf.get('password')
         return
 
     def create(self, factory_ctx):
@@ -25,7 +27,7 @@ class OpenAMFactory(IFunctionFactoryPlugin):
         :param factory_ctx: (dict) names available for Function instantiation
         :return: an object that implements a check function
         """
-        return propartial(OpenAMWrapper, url=self.openam_base_url)
+        return propartial(OpenAMWrapper, url=self.openam_base_url, user=self.username, password=self.__password)
 
 class OpenAMError(CheckError):
     def __init__(self, message):
@@ -40,6 +42,8 @@ class OpenAMWrapper(object):
     def __init__(
             self,
             url,
+            user=None,
+            password=None,
             params=None,
             timeout=10,
             max_retries=0,
@@ -49,12 +53,14 @@ class OpenAMWrapper(object):
         self.url = url
         self.params = params or {}
         self.headers = headers or {}
+        self.username = user
+        self.__password = password
 
-    def auth(self, chain=None, realm=None, user=os.getenv("OPENAM_USER"), password=os.getenv("OPENAM_PASSWORD")):
-        if not user or user == "":
-            raise OpenAMError("missing user")
-        if not password or password == "":
-            raise OpenAMError("missing password")
+    def auth(self, chain=None, realm=None, user=None, password=None):
+        if not user:
+            user = self.username
+        if not password:
+            password = self.__password
         if realm:
             self.params.update({"realm": realm})
         if chain:
@@ -93,5 +99,5 @@ if __name__ == '__main__':
     factory_ctx = {}
 
     # eventlog = EventLogWrapper()
-    openam = OpenAMWrapper(openam_url).auth(realm="/employees", chain="EmployeeChain")
+    openam = OpenAMWrapper(openam_url, user=os.getenv("OPENAM_USER"), password=os.getenv("OPENAM_PASSWORD")).auth(realm="/employees", chain="EmployeeChain")
     print(openam)
