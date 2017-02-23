@@ -47,7 +47,7 @@ class OpenAMWrapper(object):
             user=None,
             password=None,
             params=None,
-            timeout=10,
+            timeout=5,
             max_retries=0,
             verify=True,
             headers=None,
@@ -57,6 +57,7 @@ class OpenAMWrapper(object):
         self.headers = headers or {}
         self.username = user
         self.__password = password
+        self.timeout = timeout
 
     def auth(self, chain=None, realm=None, user=None, password=None):
         if not user:
@@ -79,6 +80,7 @@ class OpenAMWrapper(object):
                 self.url + "/json/authenticate",
                 params=self.params,
                 headers=self.headers,
+                timeout=self.timeout,
                 json={},
                 allow_redirects=False,
             )
