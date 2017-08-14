@@ -213,6 +213,10 @@ def collect_plugins(load_builtins=True, load_env=True, additional_dirs=None, glo
                     str(c)[len(config_prefix):]: v for c, v in global_config.iteritems()
                     if str(c).startswith(config_prefix)
                 }
+                if config_prefix + 'enabled' in conf_global and not conf_global[config_prefix + 'enabled']:
+                    plugin.plugin_object.deactivate()
+                    logger.info('Plugin %s is disabled in config', plugin.name)
+                    continue
                 logger.debug('Plugin %s received global conf keys: %s', plugin.name, conf_global.keys())
             except Exception:
                 logger.exception('Failed to parse global configuration. Reason: ')
