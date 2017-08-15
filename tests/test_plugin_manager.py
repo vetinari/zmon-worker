@@ -346,6 +346,37 @@ class TestPluginManager(unittest.TestCase):
 
         self.assertTrue(is_raised)
 
+    @patch.dict(os.environ, {'ZMON_PLUGINS': extras_plugin_dir_abs_path() + ':' + simple_plugin_dir_abs_path()})
+    def test_plugins_disable(self):
+        """
+        Test that a plugin can be disabled
+        """
+
+        # reload the plugin
+        reload(plugin_manager)
+
+        # Lets create a category filter that includes our builtin plugin type and 2 types we defines for our tests
+        category_filter = {
+            'Function': IFunctionFactoryPlugin,
+            'Color': IColorPlugin,
+            'Temperature': ITemperaturePlugin,
+        }
+
+        # inject as global conf to color_german plugin fashion sites different from the local conf
+        global_conf = {
+            'plugin.color_germany.enabled': False,
+            'plugin.color_germany.fashion_sites': 'superfashion.de hypefashion.de',
+        }
+
+        # init the plugin manager
+        plugin_manager.init_plugin_manager(category_filter=category_filter)
+
+        plugin_manager.collect_plugins(load_builtins=True, load_env=True, global_config=global_conf)
+
+        disabled = [p.name for p in plugin_manager.get_all_plugins() if not p.is_activated]
+        self.assertTrue(len(disabled) == 1)
+        self.assertIn('color_germany', disabled, 'color_germany is not disabled')
+
 
 if __name__ == '__main__':
     unittest.main()
