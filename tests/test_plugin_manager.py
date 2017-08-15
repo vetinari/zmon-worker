@@ -374,7 +374,6 @@ class TestPluginManager(unittest.TestCase):
         plugin_manager.collect_plugins(load_builtins=True, load_env=True, global_config=global_conf)
 
         disabled = [p.name for p in plugin_manager.get_all_plugins() if not p.is_activated]
-        self.assertTrue(len(disabled) == 1)
         self.assertIn('color_germany', disabled, 'color_germany is not disabled')
 
 
