@@ -18,3 +18,4 @@ Description = Builtin plugin that provides a SAML request check function.
 ;; Note valueX will be overridden if Zmon's global config has:
 ;; plugin.{plugin_name}.{key} = valueY
 url = https://idp.example.com/profile/SAML2/Unsolicited/SSO?providerId=urn:self
+;; enabled = false

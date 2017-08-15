@@ -16,6 +16,7 @@ from yapsy.PluginManager import PluginManagerSingleton
 import pkg_resources
 
 from zmon_worker_monitor.adapters.ifunctionfactory_plugin import IFunctionFactoryPlugin
+from zmon_worker_monitor.adapters.disabled_plugin import DisabledPlugin
 
 logger = logging.getLogger(__name__)
 
@@ -213,10 +214,6 @@ def collect_plugins(load_builtins=True, load_env=True, additional_dirs=None, glo
                     str(c)[len(config_prefix):]: v for c, v in global_config.iteritems()
                     if str(c).startswith(config_prefix)
                 }
-                if config_prefix + 'enabled' in conf_global and not conf_global[config_prefix + 'enabled']:
-                    plugin.plugin_object.deactivate()
-                    logger.info('Plugin %s is disabled in config', plugin.name)
-                    continue
                 logger.debug('Plugin %s received global conf keys: %s', plugin.name, conf_global.keys())
             except Exception:
                 logger.exception('Failed to parse global configuration. Reason: ')
@@ -236,6 +233,11 @@ def collect_plugins(load_builtins=True, load_env=True, additional_dirs=None, glo
 
             # for security reasons our global config take precedence over the local config
             conf.update(conf_global)
+
+            if 'enabled' in conf and (not conf['enabled'] or conf['enabled'].lower() in ['false', '0', 'no']):
+                plugin.plugin_object = DisabledPlugin(plugin.name)
+                logger.info('Plugin %s is disabled in config', plugin.name)
+                print('Plugin {} is disabled in config'.format(plugin.name))
 
             try:
                 plugin.plugin_object.configure(conf)

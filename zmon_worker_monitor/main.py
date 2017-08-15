@@ -113,6 +113,7 @@ def main(args=None):
 
     # load external plugins (should be run only once)
     plugin_manager.collect_plugins(global_config=config, load_builtins=True, load_env=True)
+    logger.info("Plugins loaded and active: {}".format([p.name for p in plugin_manager.get_all_plugins() if p.is_activated]))
 
     # start worker processes per queue according to the config
     queues = config['zmon.queues']
