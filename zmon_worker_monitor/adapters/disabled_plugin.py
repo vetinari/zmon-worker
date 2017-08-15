@@ -29,4 +29,3 @@ class DisabledPlugin(object):
 
     def __getattr__(self, name):
         raise Exception('plugin {} is disabled, called: {}'.format(self._plugin_name, name))
-
