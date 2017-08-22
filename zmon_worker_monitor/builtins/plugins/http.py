@@ -18,7 +18,7 @@ from collections import defaultdict
 from prometheus_client.parser import text_string_to_metric_families
 
 from zmon_worker_monitor.zmon_worker.errors import HttpError, CheckError, ConfigurationError
-from zmon_worker_monitor.zmon_worker.common.http import get_user_agent
+from zmon_worker_monitor.zmon_worker.common.http import get_user_agent, init_tokens
 from requests.adapters import HTTPAdapter
 
 from zmon_worker_monitor.adapters.ifunctionfactory_plugin import IFunctionFactoryPlugin, propartial
@@ -45,18 +45,7 @@ class HttpFactory(IFunctionFactoryPlugin):
         """
         # will use OAUTH2_ACCESS_TOKEN_URL environment variable by default
         # will try to read application credentials from CREDENTIALS_DIR
-        tokens.configure()
-
-        token_configuration = conf.get('oauth2.tokens')
-
-        if token_configuration:
-            for part in token_configuration.split(':'):
-                token_name, scopes = tuple(part.split('=', 1))
-                tokens.manage(token_name, scopes.split(','))
-
-        tokens.manage('uid', ['uid'])
-
-        tokens.start()
+        init_tokens(conf)
 
     def create(self, factory_ctx):
         """

@@ -11,7 +11,7 @@ import requests
 import tokens
 
 from zmon_worker_monitor.zmon_worker.errors import HttpError, ConfigurationError, CheckError
-from zmon_worker_monitor.zmon_worker.common.http import get_user_agent
+from zmon_worker_monitor.zmon_worker.common.http import get_user_agent, init_tokens
 
 from zmon_worker_monitor.adapters.ifunctionfactory_plugin import IFunctionFactoryPlugin, propartial
 
@@ -36,6 +36,11 @@ class EntitiesWrapperFactory(IFunctionFactoryPlugin):
         self.service_url = conf.get('entityservice.url', conf.get('dataservice.url', 'https://localhost:443'))
         self.oauth2 = conf.get('entityservice.oauth2', conf.get('dataservice.oauth2', False))
 
+        # will use OAUTH2_ACCESS_TOKEN_URL environment variable by default
+        # will try to read application credentials from CREDENTIALS_DIR
+        if self.oauth2:
+            init_tokens(conf)
+
         return
 
     def create(self, factory_ctx):
@@ -51,7 +56,7 @@ class EntitiesWrapperFactory(IFunctionFactoryPlugin):
 
 
 class EntitiesWrapper(object):
-    def __init__(self, service_url, infrastructure_account, verify=True, oauth2=False):
+    def __init__(self, service_url, infrastructure_account, verify=True, oauth2=False, oauth2_token_name='uid'):
 
         if not service_url:
             raise ConfigurationError('EntitiesWrapper improperly configured. URL is missing!')
@@ -64,7 +69,7 @@ class EntitiesWrapper(object):
         self.__session.verify = verify
 
         if oauth2:
-            self.__session.headers.update({'Authorization': 'Bearer {}'.format(tokens.get('uid'))})
+            self.__session.headers.update({'Authorization': 'Bearer {}'.format(tokens.get(oauth2_token_name))})
 
     def _request(self, endpoint, q, method='get'):
         try:

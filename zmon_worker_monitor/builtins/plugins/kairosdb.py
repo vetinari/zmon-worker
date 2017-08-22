@@ -10,19 +10,14 @@ import tokens
 
 from zmon_worker_monitor.zmon_worker.errors import HttpError, ConfigurationError
 
+from zmon_worker_monitor.zmon_worker.common.http import init_tokens
+
 from zmon_worker_monitor.adapters.ifunctionfactory_plugin import IFunctionFactoryPlugin, propartial
 
 logger = logging.getLogger('zmon-worker.kairosdb-function')
 
 
 DATAPOINTS_ENDPOINT = 'api/v1/datapoints/query'
-
-
-# will use OAUTH2_ACCESS_TOKEN_URL environment variable by default
-# will try to read application credentials from CREDENTIALS_DIR
-tokens.configure()
-tokens.manage('uid', ['uid'])
-tokens.start()
 
 
 class KairosdbFactory(IFunctionFactoryPlugin):
@@ -36,6 +31,7 @@ class KairosdbFactory(IFunctionFactoryPlugin):
         :param conf: configuration dictionary
         """
         self._url = conf.get('url')
+        init_tokens(conf)
 
     def create(self, factory_ctx):
         """
@@ -47,7 +43,7 @@ class KairosdbFactory(IFunctionFactoryPlugin):
 
 
 class KairosdbWrapper(object):
-    def __init__(self, url, oauth2=False):
+    def __init__(self, url, oauth2=False, oauth2_token_name='uid'):
         if not url:
             raise ConfigurationError('KairosDB wrapper improperly configured. URL is missing!')
 
@@ -56,7 +52,7 @@ class KairosdbWrapper(object):
         self.__session = requests.Session()
 
         if oauth2:
-            self.__session.headers.update({'Authorization': 'Bearer {}'.format(tokens.get('uid'))})
+            self.__session.headers.update({'Authorization': 'Bearer {}'.format(tokens.get(oauth2_token_name))})
 
     def query(self, name, group_by=None, tags=None, start=5, end=0, time_unit='minutes', aggregators=None,
               start_absolute=None, end_absolute=None):

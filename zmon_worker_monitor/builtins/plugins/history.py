@@ -10,6 +10,7 @@ import requests
 import tokens
 
 from zmon_worker_monitor.zmon_worker.errors import ConfigurationError
+from zmon_worker_monitor.zmon_worker.common.http import init_tokens
 
 from zmon_worker_monitor.builtins.plugins.distance_to_history import DistanceWrapper
 
@@ -18,12 +19,6 @@ from zmon_worker_monitor.adapters.ifunctionfactory_plugin import IFunctionFactor
 
 logger = logging.getLogger(__name__)
 
-
-# will use OAUTH2_ACCESS_TOKEN_URL environment variable by default
-# will try to read application credentials from CREDENTIALS_DIR
-tokens.configure()
-tokens.manage('uid', ['uid'])
-tokens.start()
 
 ONE_WEEK = 7 * 24 * 60 * 60
 ONE_WEEK_AND_5MIN = ONE_WEEK + 5 * 60
@@ -42,6 +37,10 @@ class HistoryFactory(IFunctionFactoryPlugin):
         :param conf: configuration dictionary
         """
         self.url = conf.get('url')
+
+        # will use OAUTH2_ACCESS_TOKEN_URL environment variable by default
+        # will try to read application credentials from CREDENTIALS_DIR
+        init_tokens(conf)
 
     def create(self, factory_ctx):
         """
@@ -98,7 +97,7 @@ def get_request(check_id, entities, time_from, time_to, aggregator='avg', sampli
 
 
 class HistoryWrapper(object):
-    def __init__(self, url=None, check_id='', entities=None, oauth2=False):
+    def __init__(self, url=None, check_id='', entities=None, oauth2=False, oauth2_token_name='uid'):
         if not url:
             raise ConfigurationError('History wrapper improperly configured. URL is required.')
 
@@ -116,7 +115,7 @@ class HistoryWrapper(object):
         self.__session.headers.update({'Content-Type': 'application/json'})
 
         if oauth2:
-            self.__session.headers.update({'Authorization': 'Bearer {}'.format(tokens.get('uid'))})
+            self.__session.headers.update({'Authorization': 'Bearer {}'.format(tokens.get(oauth2_token_name))})
 
     def __query(self, query):
         response = self.__session.post(self.url, json=query)

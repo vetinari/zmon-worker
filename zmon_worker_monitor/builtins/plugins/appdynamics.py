@@ -12,7 +12,7 @@ import requests
 import tokens
 
 from zmon_worker_monitor.zmon_worker.errors import HttpError
-from zmon_worker_monitor.zmon_worker.common.http import get_user_agent
+from zmon_worker_monitor.zmon_worker.common.http import get_user_agent, init_tokens
 
 from zmon_worker_monitor.adapters.ifunctionfactory_plugin import IFunctionFactoryPlugin, propartial
 
@@ -43,13 +43,6 @@ SEVERITIES = (
 )
 
 
-# will use OAUTH2_ACCESS_TOKEN_URL environment variable by default
-# will try to read application credentials from CREDENTIALS_DIR
-tokens.configure()
-tokens.manage('uid', ['uid'])
-tokens.start()
-
-
 class AppdynamicsFactory(IFunctionFactoryPlugin):
     def __init__(self):
         super(AppdynamicsFactory, self).__init__()
@@ -71,6 +64,10 @@ class AppdynamicsFactory(IFunctionFactoryPlugin):
         self._es_url = conf.get('es.url')
         self._index_prefix = conf.get('index.prefix')
 
+        # will use OAUTH2_ACCESS_TOKEN_URL environment variable by default
+        # will try to read application credentials from CREDENTIALS_DIR
+        init_tokens(conf)
+
     def create(self, factory_ctx):
         """
         Automatically called to create the check function's object
@@ -83,7 +80,7 @@ class AppdynamicsFactory(IFunctionFactoryPlugin):
 
 
 class AppdynamicsWrapper(object):
-    def __init__(self, url=None, username=None, password=None, es_url=None, index_prefix=''):
+    def __init__(self, url=None, username=None, password=None, es_url=None, index_prefix='', oauth2_token_name='uid'):
         if not url:
             raise RuntimeError('AppDynamics plugin improperly configured. URL is required!')
 
@@ -98,7 +95,7 @@ class AppdynamicsWrapper(object):
 
         if not username or not password:
             self.__oauth2 = True
-            self.__session.headers.update({'Authorization': 'Bearer {}'.format(tokens.get('uid'))})
+            self.__session.headers.update({'Authorization': 'Bearer {}'.format(tokens.get(oauth2_token_name))})
         else:
             self.__session.auth = (username, password)
 

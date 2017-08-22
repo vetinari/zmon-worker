@@ -10,18 +10,11 @@ import sys
 import tokens
 
 from zmon_worker_monitor.zmon_worker.errors import HttpError, ConfigurationError
-from zmon_worker_monitor.zmon_worker.common.http import get_user_agent
+from zmon_worker_monitor.zmon_worker.common.http import get_user_agent, init_tokens
 
 from zmon_worker_monitor.adapters.ifunctionfactory_plugin import IFunctionFactoryPlugin, propartial
 
 logger = logging.getLogger('zmon-worker.elasticsearch-function')
-
-
-# will use OAUTH2_ACCESS_TOKEN_URL environment variable by default
-# will try to read application credentials from CREDENTIALS_DIR
-tokens.configure()
-tokens.manage('uid', ['uid'])
-tokens.start()
 
 DEFAULT_SIZE = 10
 MAX_SIZE = 1000
@@ -44,6 +37,10 @@ class ElasticsearchFactory(IFunctionFactoryPlugin):
         """
         self._url = conf.get('url')
 
+        # will use OAUTH2_ACCESS_TOKEN_URL environment variable by default
+        # will try to read application credentials from CREDENTIALS_DIR
+        init_tokens(conf)
+
     def create(self, factory_ctx):
         """
         Automatically called to create the check function's object
@@ -54,7 +51,7 @@ class ElasticsearchFactory(IFunctionFactoryPlugin):
 
 
 class ElasticsearchWrapper(object):
-    def __init__(self, url=None, timeout=10, oauth2=False):
+    def __init__(self, url=None, timeout=10, oauth2=False, oauth2_token_name='uid'):
         if not url:
             raise ConfigurationError('Elasticsearch plugin improperly configured. URL is required!')
 
@@ -62,6 +59,7 @@ class ElasticsearchWrapper(object):
         self.timeout = timeout
         self.oauth2 = oauth2
         self._headers = {'User-Agent': get_user_agent()}
+        self._oauth2_token_name = oauth2_token_name
 
     def count(self, indices=None, q='', body=None):
         return self.__query(TYPE_COUNT, indices, q, body, source=False, size=0)
@@ -166,7 +164,7 @@ class ElasticsearchWrapper(object):
     def __request(self, url, params=None, body=None):
         """Return json response"""
         if self.oauth2:
-            self._headers.update({'Authorization': 'Bearer {}'.format(tokens.get('uid'))})
+            self._headers.update({'Authorization': 'Bearer {}'.format(tokens.get(self._oauth2_token_name))})
 
         try:
             if body is None:
