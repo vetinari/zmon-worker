@@ -412,7 +412,7 @@ class KubernetesWrapper(object):
 
         return samples_by_name
 
-    def resourcequotas(self, name=None):
+    def resourcequotas(self, name=None, **kwargs):
         """
         Return list of resource quotas.
 
