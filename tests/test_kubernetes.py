@@ -604,7 +604,8 @@ def test_persistentvolumes(monkeypatch, kwargs, filter_kwargs, res):
         (
             {}, {},
             [
-                resource_mock({'metadata': {'name': 'compute-resources', 'namespace': 'default'}, 'spec': {}, 'status': {}}),
+                resource_mock({'metadata': {'name': 'compute-resources', 'namespace': 'default'},
+                    'spec': {}, 'status': {}}),
             ]
         ),
     ]
@@ -620,9 +621,7 @@ def test_resourcequotas(monkeypatch, kwargs, filter_kwargs, res):
                     'zmon_worker_monitor.builtins.plugins.kubernetes.KubernetesWrapper._get_resources', get_resources)
     monkeypatch.setattr('pykube.ResourceQuota', resourcequota)
 
-
     query.all.return_value = res
-
 
     k = KubernetesWrapper()
 
@@ -631,6 +630,7 @@ def test_resourcequotas(monkeypatch, kwargs, filter_kwargs, res):
     assert [r.obj for r in res] == res_quotas
 
     resourcequota.objects.return_value.filter.assert_called_with(**filter_kwargs)
+
 
 def test_metrics(monkeypatch):
     client = client_mock(monkeypatch)
