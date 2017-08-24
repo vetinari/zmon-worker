@@ -604,8 +604,12 @@ def test_persistentvolumes(monkeypatch, kwargs, filter_kwargs, res):
         (
             {}, {},
             [
-                resource_mock({'metadata': {'name': 'compute-resources', 'namespace': 'default'},
-                    'spec': {}, 'status': {}}),
+                resource_mock({'metadata': {
+                        'name': 'compute-resources',
+                        'namespace': 'default'
+                    },
+                    'spec': {},
+                    'status': {}}),
             ]
         ),
     ]
