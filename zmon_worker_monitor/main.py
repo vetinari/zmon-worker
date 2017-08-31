@@ -75,6 +75,8 @@ def init_opentracing(conf):
                 sampler_val = 0.01
             elif sampler == 'ratelimiting':
                 sampler_val = 50
+        else:
+            sampler, sampler_val = sampler.split(':', 2)
 
         jcfg = jaegerConfig(config={
             'sampler': {
