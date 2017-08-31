@@ -17,6 +17,11 @@ import rpc_server
 from .flags import MONITOR_RESTART, MONITOR_KILL_REQ, MONITOR_PING
 from .web_server.start import start_web
 
+import opentracing
+from jaeger_client import Config as jaegerConfig
+import instana.options as instanaOpts
+import instana.tracer
+
 
 warnings.filterwarnings('ignore', category=SubjectAltNameWarning)
 
@@ -56,6 +61,37 @@ def process_config(config):
         config['region'] = 'unknown'
 
 
+def init_opentracing(conf):
+    impl = conf.get('opentracing.tracer', 'noop')
+    if impl == 'jaeger':
+        val = conf.get('opentracing.jaeger.sampler', 'const:1')
+        sampler = ""
+        sampler_val = 1
+        if ':' not in sampler:
+            sampler = val
+            if val == 'const':
+                sampler_val = 1
+            elif sampler == 'probabilistic':
+                sampler_val = 0.01
+            elif sampler == 'ratelimiting':
+                sampler_val = 50
+
+        jcfg = jaegerConfig(config={
+            'sampler': {
+                'type': sampler, 'param': sampler_val,
+            },
+        })
+        # sets opentracing.tracer internally
+        jcfg.initialize_tracer()
+
+    elif impl == 'instana':
+        # sets opentracing.tracer internally
+        instana.tracer.init(instanaOpts.Options(service='zmon-worker', log_level=logging.INFO))
+    else:
+        # fall back to noop
+        opentracing.tracer = opentracing.Tracer()
+
+
 def main(args=None):
 
     args = parse_args(args)
@@ -90,6 +126,9 @@ def main(args=None):
     logging.config.dictConfig(settings.RPC_SERVER_CONF['LOGGING'])
 
     logger = logging.getLogger(__name__)
+
+    # start opentracing
+    init_opentracing(config)
 
     # start the process controller
     main_proc.start_proc_control()

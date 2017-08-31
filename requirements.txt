@@ -32,3 +32,6 @@ stups-tokens>=1.0.14
 subprocess32
 timeperiod2==0.1
 Yapsy>=1.10.423
+instana==0.5.3
+jaeger-client==3.5.0
+opentracing==1.2.2
