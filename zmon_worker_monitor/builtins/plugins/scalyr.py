@@ -86,10 +86,9 @@ class ScalyrWrapper(object):
         endTime = None
         if align != 0:
             cur_time = int(time.time())  # this assumes the worker is running with UTC time
-            end = cur_time - (cur_time % align)
-            start = end - (minutes * 60)
-            startTime = start
-            endTime = end
+            endTime = cur_time - (cur_time % align)
+            startTime = endTime - (minutes * 60)
+
         val = {
             'token': self.read_key,
             'queries': [
